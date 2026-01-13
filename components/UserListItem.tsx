@@ -1,5 +1,4 @@
 import { User } from "@/types";
-import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 
 type UserListItemProps = {
@@ -20,9 +19,12 @@ export default function UserListItem({ user, onPress }: UserListItemProps) {
             className="w-12 h-12 rounded-full"
           />
         ) : (
-          <Text>{user.first_name.charAt(0).toUpperCase()}</Text>
+          <Text className="text-neutral-500 font-bold">
+            {user.first_name?.charAt(0)?.toUpperCase()}
+          </Text>
         )}
       </View>
+
       <Text className="text-gray-900 font-medium">
         {user.first_name} {user.last_name}
       </Text>

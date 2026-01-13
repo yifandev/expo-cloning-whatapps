@@ -24,8 +24,7 @@ export default function ChannelScreen() {
       <Stack.Screen
         options={{
           title: channel?.name,
-          animation: "slide_from_left",
-          animationDuration: 250,
+          animation: "slide_from_right",
           headerBackVisible: false,
           headerTitle: () => (
             <View style={{ flexDirection: "row", alignItems: "center" }}>

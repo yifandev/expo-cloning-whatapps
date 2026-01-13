@@ -1,11 +1,15 @@
 import SupabaseProvider from "@/providers/SupabaseProvider";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { ActivityIndicator } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import "../global.css";
+
+const queryClient = new QueryClient();
+
 function RootStack() {
   const { isSignedIn, isLoaded } = useAuth();
 
@@ -36,12 +40,14 @@ function RootStack() {
 
 export default function RootLayout() {
   return (
-    <ClerkProvider tokenCache={tokenCache}>
-      <SupabaseProvider>
-        <KeyboardProvider>
-          <RootStack />
-        </KeyboardProvider>
-      </SupabaseProvider>
-    </ClerkProvider>
+    <QueryClientProvider client={queryClient}>
+      <ClerkProvider tokenCache={tokenCache}>
+        <SupabaseProvider>
+          <KeyboardProvider>
+            <RootStack />
+          </KeyboardProvider>
+        </SupabaseProvider>
+      </ClerkProvider>
+    </QueryClientProvider>
   );
 }
