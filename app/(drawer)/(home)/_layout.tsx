@@ -17,6 +17,8 @@ export default function HomeLayout() {
           },
           headerShadowVisible: false,
           headerBackButtonDisplayMode: "minimal",
+          animation: "slide_from_right",
+          title: "Chat",
           headerRight: () => (
             <View className="flex-row gap-4">
               <Ionicons name="videocam-outline" size={24} />

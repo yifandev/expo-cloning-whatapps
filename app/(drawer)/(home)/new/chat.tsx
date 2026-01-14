@@ -1,44 +1,60 @@
-import UserListItem from "@/components/UserListItem";
+import UserList from "@/components/UserList";
 import { useSupabase } from "@/providers/SupabaseProvider";
-import { Tables } from "@/types/database.types";
+import { User } from "@/types";
 import { useUser } from "@clerk/clerk-expo";
-import { useQuery } from "@tanstack/react-query";
-import { ActivityIndicator, FlatList, Text } from "react-native";
-type User = Tables<"users">;
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import React from "react";
+import { View } from "react-native";
 
-type UserListProps = {
-  onPress?: (user: User) => void;
-};
-
-export default function UserList({ onPress }: UserListProps) {
+export default function LayoutNew() {
   const supabase = useSupabase();
   const { user } = useUser();
+  const router = useRouter();
 
-  const { data, error, isLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("users")
+  const createChannel = useMutation({
+    mutationFn: async (clickedUser: User) => {
+      // 1. Create a channel (if it doesn't exist)
+      const { data: channel } = await supabase
+        .from("channels")
+        .insert({ type: "direct" })
+        .throwOnError()
         .select("*")
-        .neq("id", user!.id)
+        .single();
+
+      if (!channel) {
+        throw new Error("Channel is null");
+      }
+
+      // 2. Add user to the channel
+      await supabase
+        .from("channel_users")
+        .insert({ channel_id: channel.id, user_id: clickedUser.id })
         .throwOnError();
 
-      return data;
+      // 3. Add myself to the channel
+      await supabase
+        .from("channel_users")
+        .insert({ channel_id: channel.id, user_id: user!.id })
+        .throwOnError();
+
+      return channel;
+    },
+    onSuccess(newChannel) {
+      router.back();
+      router.push(`/channel/${newChannel.id}`);
     },
   });
 
-  if (isLoading) {
-    return <ActivityIndicator />;
-  }
+  const handleUserPress = (user: User) => {
+    console.log("User clicked: ", user.first_name);
 
-  if (error) {
-    return <Text>{error.message}</Text>;
-  }
+    createChannel.mutate(user);
+  };
 
   return (
-    <FlatList
-      data={data}
-      renderItem={({ item }) => <UserListItem user={item} onPress={onPress} />}
-    />
+    <View className="">
+      <UserList onPress={handleUserPress} />
+    </View>
   );
 }

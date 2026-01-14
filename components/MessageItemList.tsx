@@ -1,6 +1,6 @@
 import { Message } from "@/types";
-import React from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import SupaImage from "./SupaImge";
 
 type MessageListItemProps = {
   message: Message;
@@ -20,10 +20,7 @@ export default function MessageListItem({
       >
         {/* Image */}
         {message.image && (
-          <Image
-            source={{ uri: message.image }}
-            className="w-48 h-48 rounded-lg"
-          />
+          <SupaImage path={message.image} className="w-48 h-48 rounded-lg" />
         )}
         {/* TextBubble */}
         {message.content && (

@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      channel_users: {
+        Row: {
+          channel_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_users_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_id: string | null
+          name: string | null
+          type: Database["public"]["Enums"]["channel-type"] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_id?: string | null
+          name?: string | null
+          type?: Database["public"]["Enums"]["channel-type"] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_id?: string | null
+          name?: string | null
+          type?: Database["public"]["Enums"]["channel-type"] | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          channel_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          image: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -52,7 +151,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      "channel-type": "direct" | "group"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -179,6 +278,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      "channel-type": ["direct", "group"],
+    },
   },
 } as const

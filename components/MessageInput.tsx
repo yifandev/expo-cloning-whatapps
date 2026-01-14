@@ -1,27 +1,89 @@
+import { useChannel } from "@/providers/ChannelProvider";
+import { useSupabase } from "@/providers/SupabaseProvider";
+import { uploadImage } from "@/utils/storage";
+import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Image, Platform, Pressable, TextInput, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Platform,
+  Pressable,
+  TextInput,
+  View,
+} from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MessageInput() {
+  const insets = useSafeAreaInsets();
+  const { channel, realTimeChannel } = useChannel();
+
   const [message, setMessage] = useState("");
   const [image, setImage] = useState<string | null>(null);
-  const insets = useSafeAreaInsets();
 
-  const handleSend = () => {
-    setMessage("");
-    setImage(null);
+  const supabase = useSupabase();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+
+  // TODO: Optimistic updates
+  const newMessage = useMutation({
+    mutationFn: async (image: string | null) => {
+      const { data } = await supabase
+        .from("messages")
+        .insert({
+          content: message,
+          user_id: user!.id,
+          channel_id: channel?.id,
+          image,
+        })
+        .select("*")
+        .single()
+        .throwOnError();
+
+      return data;
+    },
+    onSuccess(newMessage) {
+      queryClient.invalidateQueries({ queryKey: ["messages", channel?.id] });
+
+      if (realTimeChannel) {
+        realTimeChannel.send({
+          type: "broadcast",
+          event: "message_sent",
+          payload: newMessage,
+        });
+      }
+
+      // reset fields
+      setMessage("");
+      setImage(null);
+    },
+    onError(error) {
+      Alert.alert("Failed to send message", error.message);
+    },
+  });
+
+  const handleSend = async () => {
+    let supaImage: string | null = null;
+    if (image) {
+      supaImage = await uploadImage(supabase, image);
+    }
+
+    newMessage.mutate(supaImage);
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
+
+    console.log(result);
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
